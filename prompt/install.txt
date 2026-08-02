@@ -10,7 +10,7 @@ Perform the following tasks in order:
      https://marketplace.visualstudio.com/items?itemName=JohanCalderon.sap-cpi-groovy-script
 
 4. Download:
-   - Java JDK 17.0.19: https://aka.ms/download-jdk
+   - Java JDK 17.0.19: https://learn.microsoft.com/en-us/java/openjdk/older-releases
    - Groovy 4.0.29 (binary release): https://archive.apache.org/dist/groovy
 
 5. Extract each downloaded package (Java and Groovy) into the following folder, creating it if it doesn't exist:
