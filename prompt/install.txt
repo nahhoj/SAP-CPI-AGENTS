@@ -20,7 +20,9 @@ Perform the following tasks in order:
    - groovy.java.home: <root path of the extracted Java folder, i.e. the folder containing "bin">
    - groovy.groovy.home: <root path of the extracted Groovy folder, i.e. the folder containing "bin">
 
-7. download agent and skill from currently
+7. download agent and skill:
+   - agent: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/agent/sap-cpi-groovy.md
+   - skill: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/skill/sap-cpi-groovy-best-practice/SKILL.md
 
 8. add the agent and skill to ~/.config/opencode:
    - agent: ~/.config/opencode/agent/sap-cpi-groovy.md
