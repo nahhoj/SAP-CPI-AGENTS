@@ -169,7 +169,7 @@ Example (macOS/Linux):
 **Use the raw file URLs** — `github.com/.../blob/...` URLs return an
 HTML wrapper page, not the file content:
 
-- Agent: https://raw.githubusercontent.com/nahhoj/SAP-CPI-AGENTS/master/agent/prompts/sap-cpi-groovy.md
+- Agent: https://raw.githubusercontent.com/nahhoj/SAP-CPI-AGENTS/refs/heads/master/agent/prompts/sap-cpi-groovy.md
 - Skill: https://raw.githubusercontent.com/nahhoj/SAP-CPI-AGENTS/master/skill/sap-cpi-groovy-best-practice/SKILL.md
 
 Save both to `~/tmp-cpi-setup/` (created in Step 4). If either fetch
