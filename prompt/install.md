@@ -169,8 +169,8 @@ Example (macOS/Linux):
 **Use the raw file URLs** — `github.com/.../blob/...` URLs return an
 HTML wrapper page, not the file content:
 
-- Agent: https://raw.githubusercontent.com/nahhoj/SAP-CPI-AGENTS/master/agent/prompts/sap-cpi-groovy.md
-- Skill: https://raw.githubusercontent.com/nahhoj/SAP-CPI-AGENTS/master/skill/sap-cpi-groovy-best-practice/SKILL.md
+- Agent: https://raw.githubusercontent.com/nahhoj/SAP-CPI-AGENTS/master/agents/prompts/sap-cpi-groovy.md
+- Skill: https://raw.githubusercontent.com/nahhoj/SAP-CPI-AGENTS/master/skills/sap-cpi-groovy-best-practice/SKILL.md
 
 Save both to `~/tmp-cpi-setup/` (created in Step 4). If either fetch
 returns a non-200 status or HTML content instead of markdown, stop and
@@ -184,7 +184,7 @@ This guide targets the **global** OpenCode config at `~/.config/opencode/`.
 
 1. Copy the **skill** file as-is to:
    ```
-   ~/.config/opencode/skill/sap-cpi-groovy-best-practice/SKILL.md
+   ~/.config/opencode/skills/sap-cpi-groovy-best-practice/SKILL.md
    ```
    (create parent directories as needed)
 
@@ -234,7 +234,7 @@ top-level keys or agents, preserve them and merge this in.
       "hidden": false,
       "model": "opencode/deepseek-v4-flash-free",
       "temperature": 0.3,
-      "prompt": "agent/prompts/sap-cpi-groovy.md",
+      "prompt": "agents/prompts/sap-cpi-groovy.md",
       "permission": {
         "read": "allow",
         "edit": "allow",
@@ -250,7 +250,7 @@ top-level keys or agents, preserve them and merge this in.
       "hidden": false,
       "model": "opencode/deepseek-v4-flash-free",
       "temperature": 0.2,
-      "prompt": "agent/prompts/sap-cpi-groovy.md",
+      "prompt": "agents/prompts/sap-cpi-groovy.md",
       "permission": {
         "read": "allow",
         "edit": "deny",
@@ -264,10 +264,10 @@ top-level keys or agents, preserve them and merge this in.
 }
 ```
 
-**Note:** the `prompt` path (`agent/prompts/sap-cpi-groovy.md`) is
+**Note:** the `prompt` path (`agents/prompts/sap-cpi-groovy.md`) is
 relative to the location of the config file you just edited. Since this
 is the global config at `~/.config/opencode/`, the resolved path is
-`~/.config/opencode/agent/prompts/sap-cpi-groovy.md` — matching Step 8.
+`~/.config/opencode/agents/prompts/sap-cpi-groovy.md` — matching Step 8.
 
 After saving, validate the file is syntactically valid JSON/JSONC before
 finishing (e.g. `cat <file> | python3 -m json.tool` for `.json`, or
@@ -290,7 +290,7 @@ installed program folders or the final config files:
 - `~/programs/<jdk-folder>` and `~/programs/<groovy-folder>` — the
   actual installation, required at runtime.
 - `~/.config/opencode/agents/prompts/sap-cpi-groovy.md`
-- `~/.config/opencode/skill/sap-cpi-groovy-best-practice/SKILL.md`
+- `~/.config/opencode/skills/sap-cpi-groovy-best-practice/SKILL.md`
 - `~/.config/opencode/opencode.json` (or `.jsonc`, whichever was used)
 
 ---
