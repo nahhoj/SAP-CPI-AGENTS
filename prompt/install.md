@@ -50,7 +50,7 @@ If the command is not found:
 
 ---
 
-## 3. Install the VS Code extension
+## 3. Check / Install the VS Code extension
 
 Check if already installed:
 
@@ -101,6 +101,8 @@ Download both archives into `~/tmp-cpi-setup/`.
 ---
 
 ## 5. Extract into `~/programs`
+
+Do not create the JAVA_HOME environment variable.
 
 Create `~/programs` if it doesn't exist. Before extracting, check
 whether a folder matching the package (e.g. `jdk-17*`, `groovy-4*`)
@@ -169,8 +171,8 @@ Example (macOS/Linux):
 **Use the raw file URLs** — `github.com/.../blob/...` URLs return an
 HTML wrapper page, not the file content:
 
-- Agent: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/agent/prompts/sap-cpi-groovy.md
-- Skill: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/skill/sap-cpi-groovy-best-practice/SKILL.md
+- Agent: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/agents/sap-cpi-groovy.md
+- Skill: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/skills/sap-cpi-groovy-best-practice/SKILL.md
 
 Save both to `~/tmp-cpi-setup/` (created in Step 4). If either fetch
 returns a non-200 status or HTML content instead of markdown, stop and
@@ -188,91 +190,15 @@ This guide targets the **global** OpenCode config at `~/.config/opencode/`.
    ```
    (create parent directories as needed)
 
-2. For the **agent** file: open the downloaded `sap-cpi-groovy.md` and
-   **remove its YAML frontmatter block** — everything between the first
-   `---` and the second `---` line, including both delimiter lines.
-   Keep only the body content starting at `# SAP CPI Groovy Agent`.
-
-   This is required because `mode`, `model`, `temperature`, and
-   `permission` are defined per-agent in `opencode.json` (Step 9), not
-   inside the prompt file. Leaving the frontmatter in creates
-   duplicate/conflicting configuration between the two agent entries
-   that share this file.
-
-3. Save the stripped body content to:
+2. Copy the **agent** file as-is to:
    ```
-   ~/.config/opencode/prompts/sap-cpi-groovy.md
+   ~/.config/opencode/agents/sap-cpi-groovy.md
    ```
    (create parent directories as needed)
 
 ---
 
-## 9. Add both agents to the OpenCode config
-
-**First, determine which config file to use — do not create a second
-one if one already exists:**
-
-```bash
-ls ~/.config/opencode/opencode.jsonc ~/.config/opencode/opencode.json 2>/dev/null
-```
-
-- If `opencode.jsonc` exists, edit that file.
-- Else if `opencode.json` exists, edit that file.
-- Else, create `opencode.json` (the current recommended default when
-  starting fresh — comments aren't needed for this config).
-
-Merge the following into the `"agent"` object of whichever file you're
-using. **Do not overwrite the whole file** — if it already has other
-top-level keys or agents, preserve them and merge this in.
-
-```json
-    "sap-cpi-groovy": {
-      "description": "SAP CPI Groovy specialist for SAP Cloud Integration",
-      "mode": "primary",
-      "hidden": false,
-      "model": "opencode/deepseek-v4-flash-free",
-      "temperature": 0.3,
-      "prompt": "{file:./prompts/sap-cpi-groovy.md}",
-      "permission": {
-        "read": "allow",
-        "edit": "allow",
-        "bash": "allow",
-        "glob": "allow",
-        "grep": "allow",
-        "webfetch": "allow"
-      }
-    },
-    "sap-cpi-groovy-plan": {
-      "description": "SAP CPI Groovy planning specialist — reviews and designs without writing or executing",
-      "mode": "primary",
-      "hidden": false,
-      "model": "opencode/deepseek-v4-flash-free",
-      "temperature": 0.2,
-      "prompt": "{file:./prompts/sap-cpi-groovy.md}",
-      "permission": {
-        "read": "allow",
-        "edit": "deny",
-        "bash": "deny",
-        "glob": "allow",
-        "grep": "allow",
-        "webfetch": "allow"
-      }
-    }
-```
-
-**Note:** the `prompt` path (`agents/prompts/sap-cpi-groovy.md`) is
-relative to the location of the config file you just edited. Since this
-is the global config at `~/.config/opencode/`, the resolved path is
-`~/.config/opencode/agents/prompts/sap-cpi-groovy.md` — matching Step 8.
-
-After saving, validate the file is syntactically valid JSON/JSONC before
-finishing (e.g. `cat <file> | python3 -m json.tool` for `.json`, or
-OpenCode's own config validation if available). If invalid, stop and
-report — do not leave a broken config in place.
-
----
-
-## 10. Clean up temporary downloads
+## 9. Clean up temporary downloads
 
 Delete **only** the temporary installer/archive files — never the
 installed program folders or the final config files:
