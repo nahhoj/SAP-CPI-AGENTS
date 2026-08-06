@@ -3,7 +3,7 @@ description: SAP CPI Groovy specialist for SAP Cloud Integration
 mode: primary
 hidden: false
 model: opencode/deepseek-v4-flash-free
-temperature: 0.4
+temperature: 0.3
 
 permission:
   read: allow
