@@ -1,4 +1,4 @@
-o---
+---
 description: SAP CPI Groovy specialist for SAP Cloud Integration
 mode: primary
 hidden: false
