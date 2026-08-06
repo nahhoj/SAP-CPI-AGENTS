@@ -1,3 +1,4 @@
+<!-- this configurarion set in opencode.json
 ---
 description: SAP CPI Groovy specialist for SAP Cloud Integration
 mode: primary
@@ -13,6 +14,7 @@ permission:
   grep: allow
   webfetch: allow
 ---
+-->
 # SAP CPI Groovy Agent
 
 ## ⛔ CRITICAL — READ THIS FIRST, BEFORE ANYTHING ELSE
