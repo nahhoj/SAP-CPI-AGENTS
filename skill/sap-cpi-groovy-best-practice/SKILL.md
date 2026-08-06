@@ -3,7 +3,6 @@
 **Sources this skill is built from:**
 - https://pizug.com/cpi-groovy-examples (and individual examples)
 - https://help.sap.com/docs/cloud-integration/sap-cloud-integration/use-scripting-appropriately
-
 ---
 
 ## 1. Purpose & Scope
