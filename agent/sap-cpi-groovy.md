@@ -19,7 +19,7 @@ permission:
 
 These rules override every other section in this file and any pattern seen earlier in the conversation. If a previous turn in this session created a stub or ran Groovy locally, that was WRONG and must not be repeated.
 
-1. **The first action you take in this task, before any other bash command, must be a `curl`/`Invoke-RestMethod` call to `POST http://localhost:8310/run`** (after the project + script exist). Do not run `java -version`, `groovy --version`, `which groovy`, `$JAVA_HOME` lookups, or any environment inspection before this. The local machine's Java/Groovy installation is irrelevant — never check it, never fix it, never install anything.
+1. **The very first action in every task — before creating files, writing code, or running any command — is to verify that the Local Runner Service is healthy by calling `GET http://localhost:8310/healthy` (OS-specific command below). If the call fails, activate the VS Code extension to restart the server, then re-check. Only proceed once the health check passes. See "Step 0 — Mandatory Health Check" for the full procedure.**
 2. **NEVER** execute the script with `groovy <file>`, `groovy -cp ...`, `java -jar`, `java -cp`, or any direct invocation of a local Groovy/Java toolchain. The ONLY valid execution path is the `/run` endpoint of the Local Runner Service.
 3. **NEVER** create a stub, mock, or fake implementation of any SAP CPI SDK class (e.g. `com.sap.gateway.ip.core.customdev.util.Message`, `MessageLog`, etc.) to make the script runnable outside the Local Runner. If you find yourself about to write such a stub — stop. That is the signal you are about to violate this rule.
 4. **ALWAYS** create the mandatory project structure first: a dedicated `my-cpi-project/` folder with the script at its root and `in/`/`out/` subfolders. Never place scripts in a scratch/temp folder or work loose in an unrelated existing folder.
@@ -56,14 +56,15 @@ These rules override every other section in this file and any pattern seen earli
 
 For every SAP Cloud Integration (CPI) Groovy request, follow this workflow:
 
-1. Invoke the `sap-cpi-groovy-best-practice` skill before generating, reviewing, or modifying any Groovy code.
-2. Search the following reference repositories for relevant implementation patterns when they can improve the solution:
+1. **Run the Step 0 Health Check** (see below) before anything else.
+2. Invoke the `sap-cpi-groovy-best-practice` skill before generating, reviewing, or modifying any Groovy code.
+3. Search the following reference repositories for relevant implementation patterns when they can improve the solution:
    - https://pizug.com/cpi-groovy-examples
    - https://github.com/pizug/cpi-groovy-examples
    - https://help.sap.com/docs/cloud-integration/sap-cloud-integration/use-scripting-appropriately?q=groovy
-3. Adapt the implementation to the user's requirements and SAP Cloud Integration best practices.
-4. Never copy repository examples verbatim unless explicitly requested.
-5. Explain significant improvements over the reference implementation.
+4. Adapt the implementation to the user's requirements and SAP Cloud Integration best practices.
+5. Never copy repository examples verbatim unless explicitly requested.
+6. Explain significant improvements over the reference implementation.
 
 ## Compatibility Rules
 
@@ -155,21 +156,112 @@ my-cpi-project/in/
 
 ## 🚀 Execution Guide
 
-Only execute call API `http://localhost:8310/run`, do not use java o groovy directly
+### 🏥 Step 0 — Mandatory Health Check (ALWAYS FIRST)
 
-### ⛔ Absolute Prohibitions (execution)
+**This is the very first action in every task, before writing any code or creating any file.**
 
-These apply regardless of what errors appear or how "helpful" a workaround seems:
+Check that the Local Runner Service is up and responding at `http://localhost:8310/healthy`.
 
-- **NEVER** run a script with `groovy <file>`, `java -jar ...`, `java -cp ...`, or any direct invocation of the Groovy/Java toolchain. The ONLY valid way to execute a script is `POST http://localhost:8310/run`.
-- **NEVER** inspect, verify, configure, or install the local machine's Java/Groovy toolchain — no `java -version`, `groovy --version`, `which java`, `JAVA_HOME` lookups, `brew install`, etc. The Local Runner Service already owns its own runtime; that is not the agent's concern and is out of scope for this task.
-- **NEVER** create stub/mock/fake classes to substitute SAP CPI SDK types (e.g. a fake `com.sap.gateway.ip.core.customdev.util.Message`) in order to run a script outside the Local Runner. If the API call fails, the correct response is to report the failure — not to reimplement the SAP runtime locally.
-- **NEVER** work in a temp/scratch folder instead of the mandatory `my-cpi-project/` structure (`in/`, `out/`, single root script) described above.
-- If `http://localhost:8310/run` is unreachable or returns an error, stop and report it to the user using the Troubleshooting section below. Do not attempt any alternative execution method.
+---
 
-### Step 0: Always Attempt the API First
+#### Windows (PowerShell)
 
-Before doing anything else, once the script and project folder exist, call `POST http://localhost:8310/run` directly. Do not pre-emptively check whether the local machine has Groovy/Java installed, correctly configured, or on PATH — that check is irrelevant to this workflow and must not be performed.
+```powershell
+try {
+    $response = Invoke-RestMethod -Uri "http://localhost:8310/healthy" -Method Get
+    Write-Host "✅ Local Runner Service is UP: $response"
+} catch {
+    Write-Host "❌ Local Runner Service is DOWN. Activating extension to restart..."
+
+    # Activate the VS Code extension restart command
+    Start-Process "vscode://johancalderon.sap-cpi-groovy-script/restartServer"
+
+    # Wait for the service to come back up
+    Start-Sleep -Seconds 5
+
+    # Re-check
+    try {
+        $response = Invoke-RestMethod -Uri "http://localhost:8310/healthy" -Method Get
+        Write-Host "✅ Local Runner Service is now UP after restart: $response"
+    } catch {
+        Write-Host "❌ Local Runner Service is still DOWN after restart attempt."
+        Write-Host "   → Report this to the user and STOP. Do not proceed with any further steps."
+        exit 1
+    }
+}
+```
+
+---
+
+#### macOS (Bash)
+
+```bash
+if curl -sf --max-time 5 http://localhost:8310/healthy; then
+    echo "✅ Local Runner Service is UP"
+else
+    echo "❌ Local Runner Service is DOWN. Activating extension to restart..."
+
+    # Activate the VS Code extension restart command
+    open "vscode://johancalderon.sap-cpi-groovy-script/restartServer"
+
+    # Wait for the service to come back up
+    sleep 5
+
+    # Re-check
+    if curl -sf --max-time 5 http://localhost:8310/healthy; then
+        echo "✅ Local Runner Service is now UP after restart"
+    else
+        echo "❌ Local Runner Service is still DOWN after restart attempt."
+        echo "   → Report this to the user and STOP. Do not proceed with any further steps."
+        exit 1
+    fi
+fi
+```
+
+---
+
+#### Linux (Bash)
+
+```bash
+if curl -sf --max-time 5 http://localhost:8310/healthy; then
+    echo "✅ Local Runner Service is UP"
+else
+    echo "❌ Local Runner Service is DOWN. Activating extension to restart..."
+
+    # Activate the VS Code extension restart command
+    xdg-open "vscode://johancalderon.sap-cpi-groovy-script/restartServer"
+
+    # Wait for the service to come back up
+    sleep 5
+
+    # Re-check
+    if curl -sf --max-time 5 http://localhost:8310/healthy; then
+        echo "✅ Local Runner Service is now UP after restart"
+    else
+        echo "❌ Local Runner Service is still DOWN after restart attempt."
+        echo "   → Report this to the user and STOP. Do not proceed with any further steps."
+        exit 1
+    fi
+fi
+```
+
+---
+
+#### ⛔ If Still Down After Restart
+
+**Stop immediately.** Do NOT attempt any of the following as a workaround:
+- Running scripts with `groovy` or `java` directly
+- Installing or reconfiguring local Groovy/Java
+- Writing stub/mock SAP CPI SDK classes
+- Any method that bypasses the Local Runner Service
+
+Report the failure to the user with the exact error output and wait for them to resolve the environment issue. This is never something the agent should route around.
+
+---
+
+Only once the health check passes (either on first attempt or after restart) may you proceed with the next steps.
+
+---
 
 ### Step 1: Determine Your Project Path
 
@@ -204,6 +296,8 @@ Script location: /Users/john/workspace/my-cpi-project/helloWorld.groovy
 ```
 
 ### Step 3: Run Your Groovy Script
+
+Only execute via `POST http://localhost:8310/run` — never directly with `groovy` or `java`.
 
 #### Windows (PowerShell)
 
@@ -321,6 +415,18 @@ The `/run` call is not guaranteed to succeed. After every call:
 
 ---
 
+## ⛔ Absolute Prohibitions (execution)
+
+These apply regardless of what errors appear or how "helpful" a workaround seems:
+
+- **NEVER** run a script with `groovy <file>`, `java -jar ...`, `java -cp ...`, or any direct invocation of the Groovy/Java toolchain. The ONLY valid way to execute a script is `POST http://localhost:8310/run`.
+- **NEVER** inspect, verify, configure, or install the local machine's Java/Groovy toolchain — no `java -version`, `groovy --version`, `which java`, `JAVA_HOME` lookups, `brew install`, etc. The Local Runner Service already owns its own runtime; that is not the agent's concern and is out of scope for this task.
+- **NEVER** create stub/mock/fake classes to substitute SAP CPI SDK types (e.g. a fake `com.sap.gateway.ip.core.customdev.util.Message`) in order to run a script outside the Local Runner. If the API call fails, the correct response is to report the failure — not to reimplement the SAP runtime locally.
+- **NEVER** work in a temp/scratch folder instead of the mandatory `my-cpi-project/` structure (`in/`, `out/`, single root script) described above.
+- If `http://localhost:8310/run` is unreachable or returns an error, stop and report it to the user using the Troubleshooting section below. Do not attempt any alternative execution method.
+
+---
+
 ## 📋 Common Execution Scenarios
 
 ### Scenario 1: Run Script with Custom Input
@@ -405,6 +511,27 @@ curl -X POST http://localhost:8310/run \
 
 ## 🆘 Troubleshooting
 
+### Issue 0: Local Runner Service Not Responding
+
+**Problem:** `GET http://localhost:8310/healthy` fails or times out.
+
+**Solution (run automatically as part of Step 0):**
+
+1. Detect the failure from the health check command output.
+2. Activate the VS Code extension to restart the server:
+
+   - **Windows**: `Start-Process "vscode://johancalderon.sap-cpi-groovy-script/restartServer"`
+   - **macOS**: `open "vscode://johancalderon.sap-cpi-groovy-script/restartServer"`
+   - **Linux**: `xdg-open "vscode://johancalderon.sap-cpi-groovy-script/restartServer"`
+
+3. Wait ~5 seconds and re-run the health check.
+4. If still failing after restart → stop and report to the user. Do not proceed.
+
+**⚠️ Do NOT do any of the following as a workaround:**
+- Do not run the script with local `groovy`/`java` instead.
+- Do not check or try to fix the local Java/Groovy installation.
+- Do not write stub classes to simulate the SAP CPI SDK so the script can run without the Local Runner.
+
 ### Issue 1: "Path not found" Error
 
 **Problem:** Script execution fails with path not found error
@@ -428,23 +555,22 @@ curl -X POST http://localhost:8310/run \
   -d '{"groovy_script":"/Users/john/workspace/my-cpi-project/helloWorld.groovy"}'
 ```
 
-### Issue 2: Service Connection Failed
+### Issue 2: Service Connection Failed During /run
 
-**Problem:** `Invoke-RestMethod` or `curl` fails to connect to localhost:8310
+**Problem:** `Invoke-RestMethod` or `curl` fails to connect to localhost:8310 when calling `/run`
 
 **Solutions:**
 
-1. Verify CPI Groovy Runner service is running
-2. Check if port 8310 is available
-3. Ensure no firewall blocking the connection
-4. Restart the service if needed
+1. Go back to Step 0 and re-run the health check.
+2. If the health check also fails, activate the extension restart (see Issue 0 above).
+3. Restart the service if needed.
 
 **⚠️ Do NOT do any of the following as a workaround:**
 - Do not run the script with local `groovy`/`java` instead.
 - Do not check or try to fix the local Java/Groovy installation.
 - Do not write stub classes to simulate the SAP CPI SDK so the script can run without the Local Runner.
 
-If the service cannot be reached, report this clearly to the user and stop — this is the user's environment issue to resolve, not something the agent should route around.
+If the service cannot be reached after restart, report this clearly to the user and stop — this is the user's environment issue to resolve, not something the agent should route around.
 
 ### Issue 3: Input Files Not Found
 
@@ -472,22 +598,46 @@ If the service cannot be reached, report this clearly to the user and stop — t
 
 ## 📚 Best Practices
 
-1. **Always use absolute paths** - Never use relative paths
-2. **Create project folders** - Never work in root directory
-3. **Organize by naming** - Use clear script names (`validate.groovy`, `transform.groovy`, etc.)
-4. **Test systematically** - Create multiple test input files
-5. **Review output** - Always check result files after execution
-6. **Always apply** the `sap-cpi-groovy-best-practice` skill.
-7. **Use** the Pizug repositories as reference implementations.
-8. **Adapt** examples instead of copying them.
-9. **Prefer** SAP Cloud Integration best practices when examples differ.
-10. **Use version control** - Keep your project in Git
-11. **Document inputs** - Comment what each test case does
-12. **Never assume success** - Verify `/run` status and output files before reporting a result to the user.
+1. **Always run the Step 0 Health Check first** — before any code, any file, any command.
+2. **Always use absolute paths** - Never use relative paths
+3. **Create project folders** - Never work in root directory
+4. **Organize by naming** - Use clear script names (`validate.groovy`, `transform.groovy`, etc.)
+5. **Test systematically** - Create multiple test input files
+6. **Review output** - Always check result files after execution
+7. **Always apply** the `sap-cpi-groovy-best-practice` skill.
+8. **Use** the Pizug repositories as reference implementations.
+9. **Adapt** examples instead of copying them.
+10. **Prefer** SAP Cloud Integration best practices when examples differ.
+11. **Use version control** - Keep your project in Git
+12. **Document inputs** - Comment what each test case does
+13. **Never assume success** - Verify `/run` status and output files before reporting a result to the user.
 
 ---
 
 ## 🔗 Quick Reference
+
+### Health Check (Step 0)
+
+**Windows:**
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8310/healthy" -Method Get
+```
+
+**macOS:**
+```bash
+curl -sf --max-time 5 http://localhost:8310/healthy
+```
+
+**Linux:**
+```bash
+curl -sf --max-time 5 http://localhost:8310/healthy
+```
+
+### Restart Extension (if health check fails)
+
+**Windows:** `Start-Process "vscode://johancalderon.sap-cpi-groovy-script/restartServer"`  
+**macOS:** `open "vscode://johancalderon.sap-cpi-groovy-script/restartServer"`  
+**Linux:** `xdg-open "vscode://johancalderon.sap-cpi-groovy-script/restartServer"`
 
 ### Get Project Path
 
@@ -529,6 +679,7 @@ cat YOUR_PROJECT_PATH/out/result.body
 
 - **SAP CPI Groovy Best Practice Skill**: `sap-cpi-groovy-best-practice`
 - **Local Runner Service**: `http://localhost:8310`
+- **VS Code Extension Restart URI**: `vscode://johancalderon.sap-cpi-groovy-script/restartServer`
 - **Groovy Documentation**: https://groovy-lang.org/
 - **SAP Cloud Integration**: https://help.sap.com/cpi
 
