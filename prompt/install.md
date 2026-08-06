@@ -201,7 +201,7 @@ This guide targets the **global** OpenCode config at `~/.config/opencode/`.
 
 3. Save the stripped body content to:
    ```
-   ~/.config/opencode/agent/prompts/sap-cpi-groovy.md
+   ~/.config/opencode/agents/prompts/sap-cpi-groovy.md
    ```
    (create parent directories as needed)
 
@@ -289,7 +289,7 @@ installed program folders or the final config files:
 **Do NOT delete:**
 - `~/programs/<jdk-folder>` and `~/programs/<groovy-folder>` — the
   actual installation, required at runtime.
-- `~/.config/opencode/agent/prompts/sap-cpi-groovy.md`
+- `~/.config/opencode/agents/prompts/sap-cpi-groovy.md`
 - `~/.config/opencode/skill/sap-cpi-groovy-best-practice/SKILL.md`
 - `~/.config/opencode/opencode.json` (or `.jsonc`, whichever was used)
 
