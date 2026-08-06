@@ -226,15 +226,13 @@ using. **Do not overwrite the whole file** — if it already has other
 top-level keys or agents, preserve them and merge this in.
 
 ```json
-{
-  "agent": {
     "sap-cpi-groovy": {
       "description": "SAP CPI Groovy specialist for SAP Cloud Integration",
       "mode": "primary",
       "hidden": false,
       "model": "opencode/deepseek-v4-flash-free",
       "temperature": 0.3,
-      "prompt": "prompts/sap-cpi-groovy.md",
+      "prompt": "{file:./prompts/sap-cpi-groovy.md}",
       "permission": {
         "read": "allow",
         "edit": "allow",
@@ -250,7 +248,7 @@ top-level keys or agents, preserve them and merge this in.
       "hidden": false,
       "model": "opencode/deepseek-v4-flash-free",
       "temperature": 0.2,
-      "prompt": "prompts/sap-cpi-groovy.md",
+      "prompt": "{file:./prompts/sap-cpi-groovy.md}",
       "permission": {
         "read": "allow",
         "edit": "deny",
@@ -260,8 +258,6 @@ top-level keys or agents, preserve them and merge this in.
         "webfetch": "allow"
       }
     }
-  }
-}
 ```
 
 **Note:** the `prompt` path (`agents/prompts/sap-cpi-groovy.md`) is
