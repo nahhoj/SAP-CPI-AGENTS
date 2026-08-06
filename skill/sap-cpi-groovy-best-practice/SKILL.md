@@ -1,8 +1,10 @@
 # SAP CPI Groovy Best Practice Skill
 
 **Sources this skill is built from:**
+
 - https://pizug.com/cpi-groovy-examples (and individual examples)
 - https://help.sap.com/docs/cloud-integration/sap-cloud-integration/use-scripting-appropriately
+
 ---
 
 ## 1. Purpose & Scope
@@ -34,6 +36,7 @@ def Message processData(Message message) {
 ```
 
 **Rules:**
+
 - `processData` is the default entry point. It can be renamed in the iFlow Script step UI, but `processData` is the universal convention — never rename it without a documented reason.
 - The method **must** receive `Message` and **must** return `Message`. Forgetting the return statement is the single most common beginner error.
 - `messageLogFactory` is **injected automatically** by the runtime — do not import or instantiate it.
@@ -43,31 +46,38 @@ def Message processData(Message message) {
 
 ## 3. Message API Quick Reference
 
-| Goal | Method |
-|---|---|
-| Read body as String | `message.getBody(java.lang.String) as String` |
-| Read body as Reader (streaming) | `message.getBody(java.io.Reader)` |
-| Read body as InputStream | `message.getBody(java.io.InputStream)` |
-| Write body | `message.setBody(value)` |
-| Read all headers (Map) | `message.getHeaders()` |
-| Read one header | `message.getHeaders().get("headerName")` |
-| Write / overwrite header | `message.setHeader("name", value)` |
-| Read all properties (Map) | `message.getProperties()` |
-| Read one property | `message.getProperties().get("propName")` |
-| Write / overwrite property | `message.setProperty("name", value)` |
-| Get MPL message log | `messageLogFactory.getMessageLog(message)` |
-| Log payload attachment | `messageLog.addAttachmentAsString("label", body, "text/plain")` |
-| Log custom MPL header | `messageLog.addCustomHeaderProperty("key", value)` |
-| Set MPL string property | `messageLog.setStringProperty("key", value)` |
+| Goal                            | Method                                                          |
+| -------------------------------- | ----------------------------------------------------------------- |
+| Read body as String             | `message.getBody(java.lang.String)`                              |
+| Read body as Reader (streaming) | `message.getBody(java.io.Reader)`                                |
+| Read body as InputStream        | `message.getBody(java.io.InputStream)`                           |
+| Write body                      | `message.setBody(value)`                                         |
+| Read all headers (Map)          | `message.getHeaders()`                                           |
+| Read one header                 | `message.getHeaders().get("headerName")`                         |
+| Write / overwrite header        | `message.setHeader("name", value)`                               |
+| Read all properties (Map)       | `message.getProperties()`                                        |
+| Read one property               | `message.getProperties().get("propName")`                        |
+| Write / overwrite property      | `message.setProperty("name", value)`                              |
+| Get MPL message log             | `messageLogFactory.getMessageLog(message)`                       |
+| Log payload attachment          | `messageLog.addAttachmentAsString("label", body, "text/plain")`  |
+| Log custom MPL header           | `messageLog.addCustomHeaderProperty("key", value)`                |
+| Set MPL string property         | `messageLog.setStringProperty("key", value)`                      |
 
-**Type casting rule:** Always cast the body result explicitly:
+**Type casting rule:** Do NOT add a redundant `as String` cast.
+`message.getBody(java.lang.String)` already returns a `String` — the cast
+is unnecessary noise and is flagged by SAP's own scripting guidelines.
+
 ```groovy
-// Correct — explicit cast avoids ClassCastException at runtime
-def body = message.getBody(java.lang.String) as String
+// Correct
+def body = message.getBody(java.lang.String)
 
-// Also correct — using the class reference directly
-def body = message.getBody(String)
+// ❌ Avoid — redundant coercion
+def body = message.getBody(java.lang.String) as String
 ```
+
+> Source: SAP "General Scripting Guidelines" — "Don't include declarations
+> like `def body = message.getBody(java.lang.String) as String`... It's
+> enough to write `def body = message.getBody(java.lang.String)`."
 
 ---
 
@@ -79,15 +89,15 @@ Groovy automatically imports the entire `groovy.util.*` package. `XmlSlurper`, `
 
 `groovy.json.*` is **not** auto-imported, which is why `JsonSlurper`, `JsonBuilder`, and `JsonOutput` always require an explicit `import` statement (see section 5).
 
-| Class | Package | Auto-imported? |
-|---|---|---|
-| `XmlSlurper` | `groovy.util` | ✅ no import needed |
-| `XmlParser` | `groovy.util` | ✅ no import needed |
-| `XmlNodePrinter` | `groovy.util` | ✅ no import needed |
-| `NodeBuilder` | `groovy.util` | ✅ no import needed |
-| `JsonSlurper` | `groovy.json` | ❌ must import explicitly |
-| `JsonBuilder` | `groovy.json` | ❌ must import explicitly |
-| `JsonOutput` | `groovy.json` | ❌ must import explicitly |
+| Class            | Package       | Auto-imported?           |
+| ------------------ | --------------- | --------------------------- |
+| `XmlSlurper`     | `groovy.util` | ✅ no import needed       |
+| `XmlParser`      | `groovy.util` | ✅ no import needed       |
+| `XmlNodePrinter` | `groovy.util` | ✅ no import needed       |
+| `NodeBuilder`    | `groovy.util` | ✅ no import needed       |
+| `JsonSlurper`    | `groovy.json` | ❌ must import explicitly |
+| `JsonBuilder`    | `groovy.json` | ❌ must import explicitly |
+| `JsonOutput`     | `groovy.json` | ❌ must import explicitly |
 
 Other always-auto-imported packages: `java.lang.*`, `java.util.*`, `java.io.*`, `java.net.*`, `groovy.lang.*`.
 
@@ -99,8 +109,8 @@ Other always-auto-imported packages: `java.lang.*`, `java.util.*`, `java.io.*`, 
 import com.sap.gateway.ip.core.customdev.util.Message
 
 def Message processData(Message message) {
-    def body = message.getBody(java.lang.String) as String
-    def xml = new XmlSlurper().parseText(body)
+    def reader = message.getBody(java.io.Reader)
+    def xml = new XmlSlurper().parse(reader)
 
     // GPath navigation — dot notation accesses child elements
     def orderId = xml.OrderID.text()
@@ -112,7 +122,13 @@ def Message processData(Message message) {
 }
 ```
 
+**Avoid `parseText(String)`.** It requires allocating an additional String
+in memory before parsing and does not scale well for large payloads.
+Prefer `parse(Object)` on a `Reader` instead, e.g.
+`new XmlSlurper().parse(reader)`.
+
 **XmlSlurper vs XmlParser:**
+
 - `XmlSlurper` — lazy, returns `GPathResult`; best for reading and navigating. Preferred for large documents.
 - `XmlParser` — eager, returns `Node` tree; required when you need to mutate the document and serialize it back.
 
@@ -174,7 +190,7 @@ def Message processData(Message message) {
 Namespaces are a common source of bugs. Declare them explicitly:
 
 ```groovy
-def xml = new XmlSlurper().parseText(body)
+def xml = new XmlSlurper().parse(reader)
 xml.declareNamespace(ns: "http://example.com/schema")
 
 // Access namespaced element
@@ -209,7 +225,6 @@ def Message processData(Message message) {
 ```groovy
 import com.sap.gateway.ip.core.customdev.util.Message
 import groovy.json.JsonBuilder
-import groovy.json.JsonOutput
 
 def Message processData(Message message) {
     def headers = message.getHeaders()
@@ -217,13 +232,19 @@ def Message processData(Message message) {
     // Build a JSON object from headers
     def builder = new JsonBuilder()
     builder(headers)
-    def prettyJson = JsonOutput.prettyPrint(builder.toString())
+    def compactJson = builder.toString()
 
-    message.setBody(prettyJson)
+    message.setBody(compactJson)
     message.setHeader("Content-Type", "application/json")
     return message
 }
 ```
+
+**Avoid pretty-printing** (`JsonOutput.prettyPrint(...)`) for message
+bodies. Compacted/minified output is smaller and is the SAP-recommended
+default for transmitted documents; reserve pretty-printing for
+human-readable debug attachments only (e.g. Section 6d's MPL header dump,
+where readability in the monitor matters more than payload size).
 
 ---
 
@@ -237,7 +258,7 @@ def Message processData(Message message) {
 import com.sap.gateway.ip.core.customdev.util.Message
 
 def Message processData(Message message) {
-    def body = message.getBody(java.lang.String) as String
+    def body = message.getBody(java.lang.String)
 
     def messageLog = messageLogFactory.getMessageLog(message)
     if (messageLog != null) {
@@ -248,7 +269,7 @@ def Message processData(Message message) {
 }
 ```
 
-**Always null-check `messageLog` before using it.** It returns null when the iFlow log level does not produce an MPL entry.
+**Always null-check `messageLog`** before using it. It returns null when the iFlow log level does not produce an MPL entry.
 
 ### 6b. Log-level-aware logging (production-safe)
 
@@ -258,7 +279,7 @@ Keep logging steps in the flow without paying the performance cost in production
 import com.sap.gateway.ip.core.customdev.util.Message
 
 def Message processData(Message message) {
-    def body = message.getBody(java.lang.String) as String
+    def body = message.getBody(java.lang.String)
 
     def props = message.getProperties()
     def logConfig = props.get("SAP_MessageProcessingLogConfiguration")
@@ -274,6 +295,13 @@ def Message processData(Message message) {
     return message
 }
 ```
+
+> Note: this pattern reads the iFlow's configured log level via the
+> `SAP_MessageProcessingLogConfiguration` property. There is a second,
+> independent mechanism: the caller can pass a `SAP_MessageProcessingLogLevel`
+> **header** on the inbound request to force a specific log level for that
+> one message's processing. Use the header approach when the log level
+> needs to be set per-call rather than per-iFlow-configuration.
 
 ### 6c. Custom MPL header property (searchable in monitoring)
 
@@ -304,6 +332,8 @@ import groovy.json.JsonOutput
 def Message processData(Message message) {
     def builder = new JsonBuilder()
     builder(message.getHeaders())
+    // Pretty-printing is fine here — this is a human-read debug
+    // attachment in Monitor, not a transmitted message body.
     def prettyJson = JsonOutput.prettyPrint(builder.toString())
 
     def messageLog = messageLogFactory.getMessageLog(message)
@@ -389,7 +419,7 @@ import com.sap.gateway.ip.core.customdev.util.Message
 
 def Message processData(Message message) {
     try {
-        def body = message.getBody(java.lang.String) as String
+        def body = message.getBody(java.lang.String)
         // ... risky logic ...
         message.setBody(body)
     } catch (Exception e) {
@@ -437,9 +467,15 @@ def Message processData(Message message) {
 ```
 
 **Security rules from SAP official docs:**
+
 - Do **not** store credentials in headers — headers can be forwarded to receiver systems accidentally.
 - Do **not** log password values via MPL.
 - Externalize the credential name using `{{credential_name}}` in a Content Modifier so the script does not need to change per environment.
+- When using the CPI **Optimize** feature, ensure the Groovy script's
+  *source code itself* does not contain any sensitive information (e.g.
+  hardcoded values, comments with real credentials) — Optimize can expose
+  source in ways that make embedded secrets more visible. See SAP Note
+  3542713 for details.
 
 ---
 
@@ -488,24 +524,61 @@ message.setProperty("auth_token", token)
 ### ⛔ Rule 4 — Scripts must pass all static analysis checks
 
 Static analysis checks for: defects, bad practices, inconsistencies, style issues. Scripts that fail static analysis will not deploy. Common causes:
+
 - Missing return statement
 - Unused imports
 - Unreachable code
 - Deprecated API usage
 
+### ⛔ Rule 5 — Respect Secure Parameter length limits
+
+Secure Parameter values have a maximum length depending on the runtime:
+
+- Cloud Foundry: 4096 characters max (including spaces)
+- Neo: 255 characters max (including spaces)
+
+Scripts that read/write secure parameters should not assume unlimited
+length; validate or truncate upstream if the source data could exceed
+these limits.
+
+---
+
+## 9a. Tooling & Workflow Guidance
+
+These are organizational recommendations from SAP's official scripting
+guidelines that affect how scripts are authored and tested, not the code
+itself.
+
+- **Use Script Collections instead of local scripts** where a package has
+  multiple iFlows that share logic. Benefits: reuse, reduced maintenance
+  effort, reduced file size / memory usage, avoided duplicates. Only use a
+  local script when the use case doesn't support collections (e.g. UDFs in
+  Message Mappings, which don't yet support script collections).
+- **Don't use the in-browser Script step editor** for anything beyond a
+  simple transformation. Use an external IDE (e.g. IntelliJ IDEA) for a
+  better development experience.
+- **Don't test scripts by deploying and running the full iFlow.** Use a
+  simulation tool or external tooling to iterate faster.
+- **Use SLF4J** (Simple Logging Facade for Java) for logging rather than a
+  custom logging framework.
+- **Use CodeNarc** to statically check Groovy code for defects, bad
+  practices, inconsistencies, and style issues. Supported version: 3.4.0.
+
 ---
 
 ## 10. Performance Rules
 
-| Rule | Reason |
-|---|---|
-| Prefer `message.getBody(java.io.Reader)` over `String` for large payloads | Avoids loading entire payload into JVM heap |
-| Use `XmlSlurper` over `XmlParser` when only reading | XmlSlurper is lazy and more memory-efficient |
-| Never use blocking HTTP calls inside a script (`new URL(...).text`) | Blocks the thread, no timeout, no connection pool |
-| Avoid loops over large XML node sets in a single script | Common bottleneck — use Message Mapping or XSLT for bulk transformations |
-| Use standard CPI components (Value Mapping, Message Mapping, Router) when they fit | Script steps have higher overhead than native steps |
-| Check payload size before processing when the input is unbounded | Use `message.getHeaders().get("Content-Length")` or body size check to guard against huge payloads |
-| Avoid script-level (binding) variables | They persist across message executions and cause hard-to-find state leaks |
+| Rule                                                                               | Reason                                                                                             |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Prefer `message.getBody(java.io.Reader)` over `String` for large payloads          | Avoids loading entire payload into JVM heap                                                        |
+| Use `XmlSlurper` over `XmlParser` when only reading                                | XmlSlurper is lazy and more memory-efficient                                                       |
+| Never use blocking HTTP calls inside a script (`new URL(...).text`)                | Blocks the thread, no timeout, no connection pool                                                  |
+| Avoid loops over large XML node sets in a single script                            | Common bottleneck — use Message Mapping or XSLT for bulk transformations                           |
+| Use standard CPI components (Value Mapping, Message Mapping, Router) when they fit | Script steps have higher overhead than native steps                                                |
+| Check payload size before processing when the input is unbounded                   | Use `message.getHeaders().get("Content-Length")` or body size check to guard against huge payloads |
+| Avoid script-level (binding) variables                                             | They persist across message executions and cause hard-to-find state leaks                          |
+| Avoid `text += "..."` string concatenation in loops                                | Creates and discards many intermediate String objects; degrades badly on large output — use `StringBuilder` (or `StringBuffer` if thread safety is required) |
+| Simplify null/empty checks to `if (text)` instead of `if (text != null && text.length() > 0)` | Shorter, equivalent, and the SAP-recommended idiom in Groovy                      |
 
 ---
 
@@ -513,20 +586,20 @@ Static analysis checks for: defects, bad practices, inconsistencies, style issue
 
 The primary target is Groovy 4 / Java 17. Prefer syntax that also runs on Groovy 2.4.21 / Java 8 so scripts work on classic-engine tenants.
 
-| Feature | Groovy 2.4.21 compatible | Groovy 4 only | Recommendation |
-|---|---|---|---|
-| `def` for dynamic typing | ✅ | ✅ | Use `def` — works everywhere |
-| Safe navigation `?.` | ✅ | ✅ | Safe to use |
-| String GString `"${var}"` | ✅ | ✅ | Safe to use |
-| `as String` cast | ✅ | ✅ | Prefer over `(String)` cast |
-| `collect`, `inject`, `each`, `find` | ✅ | ✅ | Safe to use |
-| `@TypeChecked` / `@CompileStatic` | ✅ (limited) | ✅ | Avoid — causes issues with CPI runtime binding |
-| `var` keyword | ❌ | ✅ | **Use `def` instead** for compatibility |
-| Records (`record`) | ❌ | ✅ | Not needed in CPI scripts |
-| `switch` expressions (arrow syntax) | ❌ | ✅ | **Use classic `switch` or `if/else`** for compatibility |
-| `java.util.stream` Stream API | ⚠️ (Java 8 only) | ✅ | Prefer Groovy GDK collections — works on both |
-| `String::strip()` | ❌ (Java 8) | ✅ (Java 11+) | **Use `String::trim()` instead** for compatibility |
-| Text blocks `"""..."""` | ✅ (Groovy GString) | ✅ | Safe — Groovy multi-line strings work on both |
+| Feature                             | Groovy 2.4.21 compatible | Groovy 4 only | Recommendation                                          |
+| -------------------------------------- | --------------------------- | --------------- | ----------------------------------------------------------- |
+| `def` for dynamic typing            | ✅                        | ✅             | Use `def` — works everywhere                            |
+| Safe navigation `?.`                | ✅                        | ✅             | Safe to use                                             |
+| String GString `"${var}"`           | ✅                        | ✅             | Safe to use                                             |
+| `as String` cast                    | ✅                        | ✅             | Only use when genuinely needed (e.g. casting a `def`/`Object` of unknown type) — do not add it redundantly (see Section 3) |
+| `collect`, `inject`, `each`, `find` | ✅                        | ✅             | Safe to use                                             |
+| `@TypeChecked` / `@CompileStatic`   | ✅ (limited)              | ✅             | Avoid — causes issues with CPI runtime binding          |
+| `var` keyword                       | ❌                        | ✅             | **Use `def` instead** for compatibility                 |
+| Records (`record`)                  | ❌                        | ✅             | Not needed in CPI scripts                               |
+| `switch` expressions (arrow syntax) | ❌                        | ✅             | **Use classic `switch` or `if/else`** for compatibility |
+| `java.util.stream` Stream API       | ⚠️ (Java 8 only)         | ✅             | Prefer Groovy GDK collections — works on both           |
+| `String::strip()`                   | ❌ (Java 8)               | ✅ (Java 11+)  | **Use `String::trim()` instead** for compatibility      |
+| Text blocks `"""..."""`             | ✅ (Groovy GString)       | ✅             | Safe — Groovy multi-line strings work on both           |
 
 **When you use a Groovy-4-only or Java-17-only feature, flag it explicitly in your response as a compatibility risk.**
 
@@ -534,20 +607,25 @@ The primary target is Groovy 4 / Java 17. Prefer syntax that also runs on Groovy
 
 ## 12. Anti-Patterns — Never Do These
 
-| Anti-pattern | Why it's wrong | What to do instead |
-|---|---|---|
-| `message.getBody()` without type argument | Returns `Object` — causes `ClassCastException` downstream | `message.getBody(java.lang.String) as String` |
-| `System.out.println(...)` | Output is not visible in CPI monitoring | Use `messageLogFactory` MPL logging |
-| Catch `Exception` and return `null` or silently discard | Hides errors; makes diagnosis in monitoring impossible | Rethrow with context or use `IgnoreMessageException` for intentional skips |
-| `new URL("...").text` | Blocking call with no timeout; hangs the thread | Use a CPI HTTP adapter instead |
-| `Eval.me(...)` or `new GroovyShell()` | Out-of-memory, static analysis failure, not supported | Native Groovy logic |
-| `@Grab(...)` annotations | Not supported in CPI runtime | Use only bundled libraries |
-| Hardcoded credentials (`"password123"`) | Security violation, static analysis failure | `SecureStoreService` via `ITApiFactory` |
-| Credential stored as header | Leaks to receiver system | Store as property |
-| Script-level (binding) variables outside the method | Persist across message executions; cause state leaks | Declare all variables inside `processData` |
-| Modifying a collection while iterating it | `ConcurrentModificationException` | Collect to a new list, then modify |
-| Not null-checking `messageLog` | NPE when log level doesn't generate an MPL entry | Always `if (messageLog != null)` |
-| Not returning `message` | CPI receives `null`, iFlow crashes with a cryptic error | Always `return message` at the end |
+| Anti-pattern                                            | Why it's wrong                                            | What to do instead                                                         |
+| ----------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `message.getBody()` without type argument               | Returns `Object` — causes `ClassCastException` downstream | `message.getBody(java.lang.String)`                                        |
+| `System.out.println(...)`                               | Output is not visible in CPI monitoring                   | Use `messageLogFactory` MPL logging                                        |
+| Catch `Exception` and return `null` or silently discard | Hides errors; makes diagnosis in monitoring impossible    | Rethrow with context or use `IgnoreMessageException` for intentional skips |
+| `new URL("...").text`                                    | Blocking call with no timeout; hangs the thread           | Use a CPI HTTP adapter instead                                             |
+| `Eval.me(...)` or `new GroovyShell()`                    | Out-of-memory, static analysis failure, not supported     | Native Groovy logic                                                        |
+| `@Grab(...)` annotations                                 | Not supported in CPI runtime                              | Use only bundled libraries                                                 |
+| Hardcoded credentials (`"password123"`)                  | Security violation, static analysis failure               | `SecureStoreService` via `ITApiFactory`                                    |
+| Credential stored as header                              | Leaks to receiver system                                  | Store as property                                                          |
+| Script-level (binding) variables outside the method      | Persist across message executions; cause state leaks      | Declare all variables inside `processData`                                 |
+| Modifying a collection while iterating it                | `ConcurrentModificationException`                          | Collect to a new list, then modify                                         |
+| Not null-checking `messageLog`                           | NPE when log level doesn't generate an MPL entry          | Always `if (messageLog != null)`                                           |
+| Not returning `message`                                  | CPI receives `null`, iFlow crashes with a cryptic error   | Always `return message` at the end                                         |
+| `TimeZone.setDefault(...)`                                | Changes the JVM's default time zone tenant-wide; causes multiple technical issues, e.g. database connectivity problems | Don't use it — see SAP Note referenced for the tenant-appropriate alternative |
+| `text += "Line ${it}"` inside a loop                       | Creates multiple intermediate String objects in memory; scales poorly with payload size | Use `StringBuilder`/`StringBuffer` and `.append()`                         |
+| Redundant `as String` cast on `getBody(java.lang.String)` | Unnecessary noise; the method already returns `String`   | `def body = message.getBody(java.lang.String)`                             |
+| `parseText(String)` on large XML payloads                 | Allocates an extra String in memory; doesn't scale        | `new XmlSlurper().parse(reader)` on a `Reader`                             |
+| Pretty-printing message bodies by default                 | Larger transmitted payloads for no functional benefit     | Compact/minified output; reserve pretty-print for debug attachments only   |
 
 ---
 
@@ -556,35 +634,40 @@ The primary target is Groovy 4 / Java 17. Prefer syntax that also runs on Groovy
 Copy-paste ready patterns for the most frequent tasks.
 
 ### Read body + return unchanged
+
 ```groovy
 import com.sap.gateway.ip.core.customdev.util.Message
 
 def Message processData(Message message) {
-    def body = message.getBody(java.lang.String) as String
+    def body = message.getBody(java.lang.String)
     // ... use body ...
     return message
 }
 ```
 
 ### Read property → set property
+
 ```groovy
 def orderId = message.getProperties().get("OrderID") as String
 message.setProperty("ProcessedOrderID", orderId + "-OK")
 ```
 
 ### Read header → set header
+
 ```groovy
 def ct = message.getHeaders().get("Content-Type") as String
 message.setHeader("X-Original-Content-Type", ct)
 ```
 
 ### Parse XML → extract field → set property
+
 ```groovy
-def xml = new XmlSlurper().parseText(message.getBody(java.lang.String) as String)
+def xml = new XmlSlurper().parse(message.getBody(java.io.Reader))
 message.setProperty("OrderID", xml.OrderID.text())
 ```
 
 ### Parse JSON → extract field → set property
+
 ```groovy
 import groovy.json.JsonSlurper
 def json = new JsonSlurper().parse(message.getBody(java.io.Reader))
@@ -592,6 +675,7 @@ message.setProperty("CustomerID", json.customer?.id?.toString() ?: "")
 ```
 
 ### MPL log + null guard
+
 ```groovy
 def messageLog = messageLogFactory.getMessageLog(message)
 if (messageLog != null) {
@@ -600,12 +684,14 @@ if (messageLog != null) {
 ```
 
 ### Conditional skip (no error)
+
 ```groovy
 import com.sap.it.api.exception.IgnoreMessageException
 if (condition) throw new IgnoreMessageException()
 ```
 
 ### Read credential
+
 ```groovy
 import com.sap.it.api.securestore.SecureStoreService
 import com.sap.it.api.securestore.UserCredential
@@ -615,6 +701,29 @@ SecureStoreService svc = ITApiFactory.getService(SecureStoreService.class, null)
 UserCredential cred = svc.getUserCredential(credName)
 def user = cred.getUsername().toString()
 def pass = cred.getPassword().toString()
+```
+
+### Read URL query parameters → set as properties
+
+```groovy
+def httpQuery = message.getHeaders().get('CamelHttpQuery') as String
+if (httpQuery) {
+    def queryParameters = URLDecoder.decode(httpQuery, java.nio.charset.Charset.defaultCharset().name())
+        .tokenize('&')
+        .collectEntries { it.tokenize('=') }
+    message.setProperties(queryParameters)
+}
+```
+
+### Read URL path segments → set as properties
+
+```groovy
+def url = message.getHeaders().get("CamelHttpUrl") as String
+def segments = url.split('/')
+def size = segments.length
+message.setProperty("service", segments[size - 3])
+message.setProperty("resource", segments[size - 2])
+message.setProperty("id", segments[size - 1])
 ```
 
 ---
