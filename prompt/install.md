@@ -87,7 +87,7 @@ New-Item -ItemType Directory -Force -Path "$HOME\tmp-cpi-setup"
 still valid** by checking the listing page — do not assume a hardcoded
 URL is current:
 
-- Java JDK 17.0.19 (Microsoft Build of OpenJDK): https://learn.microsoft.com/en-us/java/openjdk/download
+- Java JDK 17.0.19 (Microsoft Build of OpenJDK): https://learn.microsoft.com/es-es/java/openjdk/older-releases or https://learn.microsoft.com/en-us/java/openjdk/download
   — select the archive matching the OS/architecture detected in Step 1.
 - Groovy 4.0.29 binary release: https://groovy.apache.org/download.html
   — use the "Binary Release" `.zip` (not source, not installer/SDK).
