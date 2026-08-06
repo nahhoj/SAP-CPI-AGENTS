@@ -1,3 +1,12 @@
+---
+name: sap-cpi-groovy-best-practice
+description: SAP CPI Groovy best practice
+license: MIT
+compatibility: opencode
+metadata:
+  audience: maintainers
+  workflow: github
+---
 # SAP CPI Groovy Best Practice Skill
 
 **Sources this skill is built from:**
