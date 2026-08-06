@@ -1,11 +1,6 @@
 ---
 name: sap-cpi-groovy-best-practice
-description: SAP CPI Groovy best practice
-license: MIT
-compatibility: opencode
-metadata:
-  audience: maintainers
-  workflow: github
+description: Use when generating, reviewing, refactoring, or troubleshooting any Groovy script for SAP Cloud Integration (CPI / Integration Suite). Covers mandatory script template, Message/XML/JSON APIs, MPL logging, error handling, credentials/SecureStore, SAP static-analysis rules, performance, anti-patterns, and Groovy 2.4.21/4 compatibility.
 ---
 # SAP CPI Groovy Best Practice Skill
 
