@@ -1,4 +1,4 @@
-# SAP CPI Groovy — Environment Setup Task List (corrected)
+# SAP CPI Groovy — Environment Setup Task List
 
 Perform the following tasks in order.
 
