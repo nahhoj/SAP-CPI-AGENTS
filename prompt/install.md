@@ -169,8 +169,8 @@ Example (macOS/Linux):
 **Use the raw file URLs** — `github.com/.../blob/...` URLs return an
 HTML wrapper page, not the file content:
 
-- Agent: https://raw.githubusercontent.com/nahhoj/SAP-CPI-AGENTS/master/agents/prompts/sap-cpi-groovy.md
-- Skill: https://raw.githubusercontent.com/nahhoj/SAP-CPI-AGENTS/master/skills/sap-cpi-groovy-best-practice/SKILL.md
+- Agent: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/agent/prompts/sap-cpi-groovy.md
+- Skill: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/skill/sap-cpi-groovy-best-practice/SKILL.md
 
 Save both to `~/tmp-cpi-setup/` (created in Step 4). If either fetch
 returns a non-200 status or HTML content instead of markdown, stop and
