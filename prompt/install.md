@@ -201,7 +201,7 @@ This guide targets the **global** OpenCode config at `~/.config/opencode/`.
 
 3. Save the stripped body content to:
    ```
-   ~/.config/opencode/agents/prompts/sap-cpi-groovy.md
+   ~/.config/opencode/prompts/sap-cpi-groovy.md
    ```
    (create parent directories as needed)
 
@@ -234,7 +234,7 @@ top-level keys or agents, preserve them and merge this in.
       "hidden": false,
       "model": "opencode/deepseek-v4-flash-free",
       "temperature": 0.3,
-      "prompt": "agents/prompts/sap-cpi-groovy.md",
+      "prompt": "prompts/sap-cpi-groovy.md",
       "permission": {
         "read": "allow",
         "edit": "allow",
@@ -250,7 +250,7 @@ top-level keys or agents, preserve them and merge this in.
       "hidden": false,
       "model": "opencode/deepseek-v4-flash-free",
       "temperature": 0.2,
-      "prompt": "agents/prompts/sap-cpi-groovy.md",
+      "prompt": "prompts/sap-cpi-groovy.md",
       "permission": {
         "read": "allow",
         "edit": "deny",
