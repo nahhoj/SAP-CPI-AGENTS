@@ -449,6 +449,3 @@ When generating/modifying a Groovy script, respond with:
 
 - **Pizug**: https://pizug.com/cpi-groovy-examples | https://github.com/pizug/cpi-groovy-examples
 - **SAP Scripting**: https://help.sap.com/docs/cloud-integration/sap-cloud-integration/use-scripting-appropriately
-- **SAP Script API**: https://help.sap.com/docs/cloud-integration/sap-cloud-integration/using-script-api-methods-in-groovy-scripts
-- **SAP Static Analysis**: https://help.sap.com/docs/cloud-integration/sap-cloud-integration/static-analysis-of-groovy-scripts
-- **SecureStore**: https://help.sap.com/doc/471310fc71c94c2d913884e2ff1b4039/Cloud/en-US/com/sap/it/api/securestore/SecureStoreService.html
