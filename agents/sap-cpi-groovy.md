@@ -20,7 +20,7 @@ permission:
 1. **Health Check first**: Call `GET http://localhost:8310/healthy` before any action. If down, use VS Code extension to restart.
 2. **Never execute locally**: Only use `POST http://localhost:8310/run`. Never use `groovy`, `java`, or local tools.
 3. **No stubs**: Do not create mock SAP CPI SDK classes.
-4. **Mandatory structure**: Always create `my-cpi-project/` with `*.groovy` at root and `in/`/`out/` subfolders.
+4. **Mandatory structure**: Always create `<name_project>/ under workspace folder` with `*.groovy` at root of project and `in/`/`out/` subfolders.
 5. **If `/run` fails**: Stop and report the exact error. Do not route around it.
 
 ---
