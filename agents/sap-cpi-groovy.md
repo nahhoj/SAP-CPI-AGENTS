@@ -92,8 +92,8 @@ pwd  # Copy this path as <projectPath>
 
 **Windows PowerShell**:
 ```powershell
-$projectPath = "C:\path\to\my-cpi-project"
-$jsonBody = "{`"groovy_script`":`"$projectPath\<scriptName>.groovy`"}"
+$projectPath = "C:/path/to/my-cpi-project"
+$jsonBody = "{`"groovy_script`":`"$projectPath/<scriptName>.groovy`"}"
 Invoke-RestMethod -Uri "http://localhost:8310/run" -Method Post -Body $jsonBody -ContentType "application/json"
 ```
 
