@@ -89,6 +89,8 @@ URL is current:
 
 - Java JDK 17.0.19 (Microsoft Build of OpenJDK): https://learn.microsoft.com/es-es/java/openjdk/older-releases or https://learn.microsoft.com/en-us/java/openjdk/download
   — select the archive matching the OS/architecture detected in Step 1.
+- Groovy 2.4.21 binary release: https://groovy.apache.org/download.html
+  — use the "Binary Release" `.zip` (not source, not installer/SDK).
 - Groovy 4.0.29 binary release: https://groovy.apache.org/download.html
   — use the "Binary Release" `.zip` (not source, not installer/SDK).
 
@@ -105,7 +107,7 @@ Download both archives into `~/tmp-cpi-setup/`.
 Do not create the JAVA_HOME environment variable.
 
 Create `~/programs` if it doesn't exist. Before extracting, check
-whether a folder matching the package (e.g. `jdk-17*`, `groovy-4*`)
+whether a folder matching the package (e.g. `jdk-17*`, `groovy-4*`,`groovy-2*`)
 already exists there — if so, skip re-extraction for that package
 (idempotency) unless the user asked for a clean reinstall.
 
@@ -125,7 +127,7 @@ Expand-Archive -Path "$HOME\tmp-cpi-setup\<groovy-archive>.zip" -DestinationPath
 
 After extraction, record the exact resulting folder names (they
 typically include the version number, e.g. `~/programs/jdk-17.0.19+9`,
-`~/programs/groovy-4.0.29`) — required as-is in Step 6.
+`~/programs/groovy-4.0.29`, `~/programs/groovy-2.4.21`) — required as-is in Step 6.
 
 ---
 
@@ -160,7 +162,7 @@ Example (macOS/Linux):
 ```json
 {
   "groovy.java.home": "/Users/<you>/programs/jdk-17.0.19+9",
-  "groovy.groovy.home": "/Users/<you>/programs/groovy-4.0.29"
+  "groovy.groovy.home": "/Users/<you>/programs/groovy-2.4.21"
 }
 ```
 
