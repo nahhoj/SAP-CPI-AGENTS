@@ -43,7 +43,7 @@ permission:
 
 ```
 workspace/
-├── my-cpi-project/
+├── <name_project>/
   ├── *.groovy              ← Single entry-point script at root
   ├── in/
   │   ├── *.body            ← ONE message body
