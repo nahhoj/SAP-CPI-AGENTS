@@ -60,8 +60,8 @@ def body = message.getBody(java.lang.String) as String
 ## 3. XML Handling
 
 **⚠️ Import requirements differ by Groovy version**:
-- **Groovy 2.4.21**: groovy.util.* to `XmlSlurper`, `XmlParser`
-- **Groovy 4**: Require explicit `import groovy.xml.*` (moved in Groovy 4.x)
+- **Groovy 2.4.21**: `import groovy.util.*` to `XmlSlurper`, `XmlParser`
+- **Groovy 4**: `import groovy.xml.*` (moved in Groovy 4.x)
 
 ### Read XML (XmlSlurper — preferred for reading)
 
