@@ -309,7 +309,7 @@ def Message processData(Message message) {
 | `?.` (safe nav) | ✅ | ✅ | Safe everywhere |
 | String GString `"${x}"` | ✅ | ✅ | Safe everywhere |
 | `collect`, `each`, `find` | ✅ | ✅ | Safe everywhere |
-| `XmlSlurper`, `XmlParser` location | `groovy.util.*` (auto) | `groovy.xml.*` (explicit import) | Import explicitly for Groovy 4 |
+| `XmlSlurper`, `XmlParser` location | `groovy.util.*` | `groovy.xml.*` |
 | `var` keyword | ❌ | ✅ | **Use `def` instead** |
 | `switch` arrow syntax | ❌ | ✅ | **Use classic switch** |
 | Records | ❌ | ✅ | Not needed in CPI |
@@ -439,11 +439,10 @@ When generating/modifying a Groovy script, respond with:
 
 1. **Complete script** — copy-paste ready, no fragments
 2. **Import justification** — why each non-obvious import is needed
-3. **Compatibility note** — flag any Groovy-4-only or Java-17-only features
-4. **Input/output example** — show what script expects & produces
-5. **MPL logging note** — confirm null-guard in place, explain what's logged
-6. **Anti-pattern check** — verify script avoids all anti-patterns (Section 12)
-7. **SAP compliance** — confirm script passes static analysis (no Eval, no unsupported APIs, clean imports)
+3. **Input/output example** — show what script expects & produces
+4. **MPL logging note** — confirm null-guard in place, explain what's logged
+5. **Anti-pattern check** — verify script avoids all anti-patterns (Section 12)
+6. **SAP compliance** — confirm script passes static analysis (no Eval, no unsupported APIs, clean imports)
 
 ---
 
