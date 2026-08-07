@@ -1,6 +1,6 @@
 ---
 name: sap-cpi-groovy-best-practice
-description: Best practices for writing, reviewing, or fixing Groovy scripts in SAP Cloud Integration (CPI). Covers mandatory template, Message/XML/JSON APIs, logging, error handling, credentials, SAP static rules, performance, and Groovy 2.4.21/4 compatibility.
+description: Best practices for writing, reviewing, or fixing Groovy scripts in SAP Cloud Integration (CPI). Covers mandatory template, Message/XML/JSON APIs, logging, error handling, credentials, SAP static rules, performance
 ---
 
 # SAP CPI Groovy Best Practice
@@ -8,6 +8,8 @@ description: Best practices for writing, reviewing, or fixing Groovy scripts in 
 **Sources**: https://pizug.com/cpi-groovy-examples | https://help.sap.com/docs/cloud-integration/ | SAP Official Scripting Guidelines
 
 ## 1. Mandatory Script Template
+
+by default write groovy script in version 2.4.21.
 
 Every CPI Groovy script MUST follow this structure:
 
@@ -58,7 +60,7 @@ def body = message.getBody(java.lang.String) as String
 ## 3. XML Handling
 
 **⚠️ Import requirements differ by Groovy version**:
-- **Groovy 2.4.21**: `XmlSlurper`, `XmlParser` auto-imported via `groovy.util.*`
+- **Groovy 2.4.21**: groovy.util.* to `XmlSlurper`, `XmlParser`
 - **Groovy 4**: Require explicit `import groovy.xml.*` (moved in Groovy 4.x)
 
 ### Read XML (XmlSlurper — preferred for reading)
