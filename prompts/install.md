@@ -89,9 +89,9 @@ URL is current:
 
 - Java JDK 17.0.19 (Microsoft Build of OpenJDK): https://learn.microsoft.com/es-es/java/openjdk/older-releases or https://learn.microsoft.com/en-us/java/openjdk/download
   — select the archive matching the OS/architecture detected in Step 1.
-- Groovy 2.4.21 binary release: https://groovy.apache.org/download.html
+- Groovy 2.4.21 binary release: https://groovy.jfrog.io/ui/native/dist-release-local/groovy-zips
   — use the "Binary Release" `.zip` (not source, not installer/SDK).
-- Groovy 4.0.29 binary release: https://groovy.apache.org/download.html
+- Groovy 4.0.29 binary release: https://groovy.jfrog.io/ui/native/dist-release-local/groovy-zips
   — use the "Binary Release" `.zip` (not source, not installer/SDK).
 
 **If a listed version cannot be confirmed as currently available,**
