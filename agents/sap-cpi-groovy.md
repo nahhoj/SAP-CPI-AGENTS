@@ -121,7 +121,6 @@ After every execution:
 1. Check HTTP status code (non-2xx = failure)
 2. Verify `out/` files exist and are updated (not stale/missing)
 3. Common failures:
-   - Groovy compilation error (syntax, missing import, unsupported API for 2.4.21)
    - Local Runner not running
    - Script path incorrect or relative (use absolute paths)
    - Missing/malformed input files
