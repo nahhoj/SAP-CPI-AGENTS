@@ -27,8 +27,7 @@ permission:
 
 ## Agent Configuration
 
-**Primary Target**: Groovy 4 / Java 17  
-**Backward Compatibility**: Groovy 2.4.21 / Java 8 (when reasonable equivalents exist)  
+**Primary Target**: Groovy 2.4.21 / Java 17
 **Local Runner JVM**: Java 17.0.19  
 **Service**: `http://localhost:8310`
 
