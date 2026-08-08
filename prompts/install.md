@@ -1,232 +1,128 @@
-# SAP CPI Groovy — Environment Setup Task List
+# SAP CPI Groovy — Environment Setup Task List (Condensed)
 
-Perform the following tasks in order. If any step fails or cannot be
-verified, **stop and report the exact error to the user** — do not
-proceed to later steps that depend on it, and do not silently guess.
+## ⚙️ Config Variables (set these before running)
 
-This list is safe to re-run: each step checks current state before
-acting, so a partial/failed prior run can be resumed without manual
-cleanup.
-
----
-
-## 1. Detect operating system
-
-Run the OS-detection command appropriate to your execution shell:
-
-**Bash (macOS/Linux):**
 ```bash
-uname -s
-# Darwin => macOS, Linux => Linux
+JAVA_VERSION="17.0.19"        # Microsoft Build of OpenJDK
+GROOVY_VERSION="2.4.21"       # Primary target runtime
+GROOVY_ALT_VERSION="4.0.29"   # Secondary/reference version
 ```
 
-**PowerShell (Windows):**
-```powershell
-$IsWindows   # or: [System.Environment]::OSVersion.Platform
-```
-
-Store the result and use it to select the correct command/path variant
-in every step below.
+Use these variables everywhere a version/path is referenced below —
+never hardcode a version number directly in a command.
 
 ---
 
-## 2. Check / install VS Code
+## Rules
+- Run steps **in order**. If any step fails/can't be verified → **stop, report the exact error**, do not proceed or guess.
+- **Idempotent**: each step checks current state before acting — safe to re-run after a partial failure.
 
-Check if VS Code is installed:
+---
 
+## 1. Detect OS
+```bash
+uname -s        # Darwin=macOS, Linux=Linux
+```
+```powershell
+$IsWindows
+```
+Use result to pick the correct command/path variant in later steps.
+
+## 2. Check/Install VS Code
 ```bash
 code --version
 ```
+If missing: download OS-appropriate installer from https://code.visualstudio.com/Download, install (use silent flags if available), re-verify with `code --version`. Fail → stop, report.
 
-If the command is not found:
-
-1. Download the OS-appropriate installer from:
-   https://code.visualstudio.com/Download
-   (`.exe` Windows / `.zip`,`.dmg` macOS / `.deb`,`.rpm`,tarball Linux)
-2. Install it using the OS-standard method (silent/unattended flags if
-   available, e.g. `/VERYSILENT` on the Windows installer).
-3. Re-run `code --version` to confirm success. If it still fails, stop
-   and report — do not proceed to Step 3.
-
----
-
-## 3. Check / Install the VS Code extension
-
-Check if already installed:
-
+## 3. Check/Install VS Code Extension
 ```bash
 code --list-extensions | grep -i sap-cpi-groovy-script
 ```
+If missing: `code --install-extension johancalderon.sap-cpi-groovy-script`, then re-verify. Still missing → stop, report.
+(Marketplace ref only: https://marketplace.visualstudio.com/items?itemName=JohanCalderon.sap-cpi-groovy-script)
 
-If not listed, install it:
+## 4. Download JDK + Groovy
 
+**Step 4a — Check each package individually before downloading anything.**
+Run this command:
 ```bash
-code --install-extension johancalderon.sap-cpi-groovy-script
+ls ~/programs
 ```
+Then evaluate the following 3 conditions **one by one**:
 
-Re-run the `--list-extensions` check to confirm. If it's still not
-listed after install, stop and report the error output — do not proceed.
+| Package | Condition to check | If folder found | If folder NOT found |
+|---|---|---|---|
+| JDK | Does a folder named exactly `jdk-${JAVA_VERSION}*` exist? | **SKIP downloading JDK.** Go to Step 4b. | **Download JDK** in Step 4c. |
+| Groovy (primary) | Does a folder named exactly `groovy-${GROOVY_VERSION}*` exist? | **SKIP downloading Groovy primary.** Go to Step 4b. | **Download Groovy primary** in Step 4c. |
+| Groovy (alt) | Does a folder named exactly `groovy-${GROOVY_ALT_VERSION}*` exist? | **SKIP downloading Groovy alt.** Go to Step 4b. | **Download Groovy alt** in Step 4c. |
 
-(Marketplace page for reference only, not for direct download:
-https://marketplace.visualstudio.com/items?itemName=JohanCalderon.sap-cpi-groovy-script)
+**Exception:** if the user explicitly asked for a clean reinstall, ignore this table and download all 3 packages regardless of what's found.
 
----
+**Step 4b — If ALL 3 packages were found:** skip Step 4c and Step 5 entirely for those packages, and go directly to Step 6 using the existing folders. If at least one package was NOT found, continue to Step 4c for only the missing package(s).
 
-## 4. Download Java JDK and Groovy
-
-Create the temporary working folder first (if it doesn't already exist):
-
+**Step 4c — Download only the missing package(s):**
 ```bash
 mkdir -p ~/tmp-cpi-setup
 ```
-```powershell
-New-Item -ItemType Directory -Force -Path "$HOME\tmp-cpi-setup"
-```
+**Before downloading**, confirm exact version + URL are still valid on the listing pages (don't assume a hardcoded URL is current):
+- JDK `$JAVA_VERSION`: https://learn.microsoft.com/en-us/java/openjdk/download (pick OS/arch archive)
+- Groovy `$GROOVY_VERSION` binary `.zip`: https://groovy.jfrog.io/ui/native/dist-release-local/groovy-zips
+- Groovy `$GROOVY_ALT_VERSION` binary `.zip`: same URL as above
 
-**Before downloading, confirm the exact version and direct file URL are
-still valid** by checking the listing page — do not assume a hardcoded
-URL is current:
+Download both into `~/tmp-cpi-setup/`. Version unresolvable → stop, report which package.
 
-- Java JDK 17.0.19 (Microsoft Build of OpenJDK): https://learn.microsoft.com/es-es/java/openjdk/older-releases or https://learn.microsoft.com/en-us/java/openjdk/download
-  — select the archive matching the OS/architecture detected in Step 1.
-- Groovy 2.4.21 binary release: https://groovy.jfrog.io/ui/native/dist-release-local/groovy-zips
-  — use the "Binary Release" `.zip` (not source, not installer/SDK).
-- Groovy 4.0.29 binary release: https://groovy.jfrog.io/ui/native/dist-release-local/groovy-zips
-  — use the "Binary Release" `.zip` (not source, not installer/SDK).
+## 5. Extract to `~/programs`
+No `JAVA_HOME` env var. Create `~/programs` if missing. **Skip re-extraction** if a matching folder already exists (`jdk-$JAVA_VERSION*`, `groovy-$GROOVY_VERSION*`, etc.) unless user wants a clean reinstall.
 
-**If a listed version cannot be confirmed as currently available,**
-stop and report which package/version could not be resolved — do not
-substitute an unverified URL.
-
-Download both archives into `~/tmp-cpi-setup/`.
-
----
-
-## 5. Extract into `~/programs`
-
-Do not create the JAVA_HOME environment variable.
-
-Create `~/programs` if it doesn't exist. Before extracting, check
-whether a folder matching the package (e.g. `jdk-17*`, `groovy-4*`,`groovy-2*`)
-already exists there — if so, skip re-extraction for that package
-(idempotency) unless the user asked for a clean reinstall.
-
-**macOS / Linux:**
 ```bash
-mkdir -p ~/programs
 tar -xzf ~/tmp-cpi-setup/<java-archive> -C ~/programs
 unzip ~/tmp-cpi-setup/<groovy-archive>.zip -d ~/programs
 ```
-
-**Windows (PowerShell):**
 ```powershell
-New-Item -ItemType Directory -Force -Path "$HOME\programs"
-Expand-Archive -Path "$HOME\tmp-cpi-setup\<java-archive>.zip" -DestinationPath "$HOME\programs" -Force
-Expand-Archive -Path "$HOME\tmp-cpi-setup\<groovy-archive>.zip" -DestinationPath "$HOME\programs" -Force
+Expand-Archive -Path "$HOME\tmp-cpi-setup\<archive>.zip" -DestinationPath "$HOME\programs" -Force
 ```
+Record exact resulting folder names (e.g. `jdk-$JAVA_VERSION+9`, `groovy-$GROOVY_VERSION`) — needed as-is in Step 6.
 
-After extraction, record the exact resulting folder names (they
-typically include the version number, e.g. `~/programs/jdk-17.0.19+9`,
-`~/programs/groovy-4.0.29`, `~/programs/groovy-2.4.21`) — required as-is in Step 6.
+## 6. Configure VS Code `settings.json`
+- Windows: `%APPDATA%\Code\User\settings.json`
+- macOS: `~/Library/Application Support/Code/User/settings.json`
+- Linux: `~/.config/Code/User/settings.json`
 
----
+**Before writing**, verify real setting IDs via Extensions panel → gear icon → Extension Settings; if they differ from below, use the real ones and note the discrepancy.
 
-## 6. Configure VS Code settings.json
+**Write these keys into the JSON object.** If the file doesn't exist, create it with `{}` first. If the file already has other, unrelated keys, keep them untouched. **If `groovy.java.home` or `groovy.groovy.home` already exist in the file, overwrite their values with the ones below — do not skip them.**
 
-Locate `settings.json` for the OS detected in Step 1:
-
-- **Windows:** `%APPDATA%\Code\User\settings.json`
-- **macOS:** `~/Library/Application Support/Code/User/settings.json`
-- **Linux:** `~/.config/Code/User/settings.json`
-
-**Before adding keys, verify the exact setting IDs** against the "SAP
-CPI Groovy Script" extension's published configuration (VS Code:
-Extensions panel → gear icon on the installed extension → Extension
-Settings). If the setting IDs below don't match what the extension
-actually exposes, use the extension's real IDs instead and note the
-discrepancy when reporting completion.
-
-Merge the following keys into the existing JSON object (create the file
-with `{}` first if it doesn't exist; do not overwrite other existing
-settings). Use the **root folder** of each extracted package — the
-folder that directly contains `bin/`, not `bin` itself:
+Use the **root folder** of each extracted package (the folder that directly contains `bin/`, not `bin` itself):
+- `groovy.java.home` → root folder of the extracted JDK (version `$JAVA_VERSION`)
+- `groovy.groovy.home` → root folder of the extracted Groovy. **Default to `$GROOVY_VERSION`** (the primary target runtime) **unless the user explicitly says to use `$GROOVY_ALT_VERSION` instead.**
 
 ```json
 {
-  "groovy.java.home": "<absolute path to extracted JDK root>",
-  "groovy.groovy.home": "<absolute path to extracted Groovy root>"
+  "groovy.java.home": "<absolute path to extracted JDK root, version $JAVA_VERSION>",
+  "groovy.groovy.home": "<absolute path to extracted Groovy root, version $GROOVY_VERSION unless user specified $GROOVY_ALT_VERSION>"
 }
 ```
 
-Example (macOS/Linux):
-```json
-{
-  "groovy.java.home": "/Users/<you>/programs/jdk-17.0.19+9",
-  "groovy.groovy.home": "/Users/<you>/programs/groovy-2.4.21"
-}
-```
+## 7. Download agent + skill (raw content only)
+Use raw file URLs, not `github.com/.../blob/...` (returns HTML, not content):
+- Agent: raw URL for `agents/sap-cpi-groovy.md`
+- Skill: raw URL for `skills/sap-cpi-groovy-best-practice/SKILL.md`
+
+Save to `~/tmp-cpi-setup/`. Non-200 or HTML instead of markdown → stop, report.
+
+## 8. Place files in OpenCode config (global: `~/.config/opencode/`)
+1. Skill → `~/.config/opencode/skills/sap-cpi-groovy-best-practice/SKILL.md` (create dirs as needed)
+2. Agent → `~/.config/opencode/agents/sap-cpi-groovy.md` (create dirs as needed)
+
+## 9. Cleanup
+**Delete only**: entire `~/tmp-cpi-setup/` (archives + original agent/skill copies).
+**Never delete**: `~/programs/<jdk-folder>`, `~/programs/<groovy-folder>`, `~/.config/opencode/agents/.../sap-cpi-groovy.md`, `~/.config/opencode/skills/.../SKILL.md`, `~/.config/opencode/opencode.json`/`.jsonc`.
+Validate the JSON/JSONC config is well-formed before marking this step complete.
 
 ---
 
-## 7. Download the agent and skill files (raw content, not GitHub HTML pages)
-
-**Use the raw file URLs** — `github.com/.../blob/...` URLs return an
-HTML wrapper page, not the file content:
-
-- Agent: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/agents/sap-cpi-groovy.md
-- Skill: https://github.com/nahhoj/SAP-CPI-AGENTS/blob/master/skills/sap-cpi-groovy-best-practice/SKILL.md
-
-Save both to `~/tmp-cpi-setup/` (created in Step 4). If either fetch
-returns a non-200 status or HTML content instead of markdown, stop and
-report — do not proceed to Step 8 with bad content.
-
----
-
-## 8. Place the agent and skill in the OpenCode config directory
-
-This guide targets the **global** OpenCode config at `~/.config/opencode/`.
-
-1. Copy the **skill** file as-is to:
-   ```
-   ~/.config/opencode/skills/sap-cpi-groovy-best-practice/SKILL.md
-   ```
-   (create parent directories as needed)
-
-2. Copy the **agent** file as-is to:
-   ```
-   ~/.config/opencode/agents/sap-cpi-groovy.md
-   ```
-   (create parent directories as needed)
-
----
-
-## 9. Clean up temporary downloads
-
-Delete **only** the temporary installer/archive files — never the
-installed program folders or the final config files:
-
-**Delete:**
-- The entire `~/tmp-cpi-setup/` folder, including the Java archive,
-  Groovy archive, and the original (frontmatter-included) copies of the
-  agent/skill files.
-
-**Do NOT delete:**
-- `~/programs/<jdk-folder>` and `~/programs/<groovy-folder>` — the
-  actual installation, required at runtime.
-- `~/.config/opencode/agents/prompts/sap-cpi-groovy.md`
-- `~/.config/opencode/skills/sap-cpi-groovy-best-practice/SKILL.md`
-- `~/.config/opencode/opencode.json` (or `.jsonc`, whichever was used)
-
----
-
-## Summary of fixes applied (this revision)
-
-| # | Issue | Fix |
-|---|---|---|
-| 9 | Blindly created `opencode.json` even if `.jsonc` already existed | Added explicit check-and-prefer-existing-file logic before edit/create |
-| 4, 6 | "Verify" steps had no defined fallback if verification failed | Added explicit stop-and-report instruction on verification failure |
-| 5, 3, 9 | No idempotency — re-running could error or duplicate work | Added existence checks before install/extract/create actions |
-| 1 | OS detection had no concrete command | Added literal `uname -s` / `$IsWindows` commands |
-| 2, 3, 7, 9 | No defined behavior on failure (download/install/fetch errors) | Added explicit "stop and report, do not proceed" at each risk point |
-| 4 | Temp folder was referenced but never explicitly created | Added explicit `mkdir` as the first action in Step 4 |
-| 9 | No post-write validation of the JSON/JSONC config | Added a validation check before considering Step 9 complete |
+## Key safeguards preserved
+- Stop-and-report on any unverifiable/failed step (no silent workarounds)
+- Idempotency checks before install/extract/create
+- Prefer existing `opencode.json`/`.jsonc` over creating a duplicate
+- Version/URL freshness must be confirmed, not assumed
