@@ -43,6 +43,14 @@ If missing: `code --install-extension johancalderon.sap-cpi-groovy-script`, then
 
 ## 4. Download JDK + Groovy
 
+⛔ **ABSOLUTE PROHIBITION — applies to this entire step and Step 5:**
+**NEVER install** Java or Groovy using any package manager or installer
+tool. This includes, without limitation: `brew`, `brew install`, `apt`,
+`apt-get`, `yum`, `dnf`, `choco`, `winget`, `sdkman`, `asdf`, or any GUI
+installer. **Do not run an install command for Java or Groovy under any
+circumstance — even if one of these tools is already available on the
+system, and even if the user asks for it.**
+
 **Step 4a — Check each package individually before downloading anything.**
 Run this command:
 ```bash
