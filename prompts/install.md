@@ -1,4 +1,4 @@
-# SAP CPI Groovy — Environment Setup Task List (Condensed)
+# SAP CPI Groovy — Environment Setup Task List
 
 ## ⚙️ Config Variables (set these before running)
 
